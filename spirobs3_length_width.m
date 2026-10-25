@@ -14,7 +14,7 @@ function spirobs3_length_width()
 % Run:  spirobs3_length_width
 
     % ------------------------- user settings --------------------------
-    STL_FILE   = 'CR_3D_V3_LogSpiral';
+    STL_FILE   = 'CR_3D_V6.STL';
     ARM_AZ_DEG = 270;
     DTHETA_DEG = 30;
     B_FIXED    = [];          % [] = fit b to the STL joint spacing

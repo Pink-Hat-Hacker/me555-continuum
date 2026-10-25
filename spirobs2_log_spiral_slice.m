@@ -4,9 +4,10 @@ function spirobs2_log_spiral_slice()
 %
 % Each STL unit (cut by the plane through the axis and one arm) is moved as
 % a rigid body so that its two joints sit on the central spiral
-% rho_c = a1*exp(b*theta) at angular steps of dtheta. The spiral is the one
-% fitted to the STL joint spacing (same fit as script 1), so the joints land
-% on the spiral; what you see is how well the real unit shapes close up.
+% rho_c = a1*exp(b*theta) at angular steps of dtheta. The base block and the
+% tip are treated as extra units: the fitted joint series is extended below
+% the first joint and above the last until the whole STL height is covered,
+% so the ENTIRE model is wrapped onto the spiral.
 %   black         original spiral  rho = a e^{b theta}  (and next turn, dotted)
 %   orange dashed central spiral (the robot axis)
 %   grey rays     the dtheta steps (unit faces of the ideal design)
@@ -16,13 +17,15 @@ function spirobs2_log_spiral_slice()
 % Run:  spirobs2_log_spiral_slice
 
     % ------------------------- user settings --------------------------
-    STL_FILE   = 'CR_3D_V3_LogSpiral.STL';
+    STL_FILE   = 'CR_3D_V6.STL';
     ARM_AZ_DEG = 270;
     DTHETA_DEG = 30;
     B_FIXED    = [];          % [] = fit b to the STL
     ARM_SIDE   = 'inner';     % arm faces the spiral centre ('inner', the side that closes) or 'outer'
-    THETA0_DEG = -90;         % spiral angle of the base joint (-90 = base at the bottom)
+    THETA0_DEG = -90;         % spiral angle of the first detected joint (-90 = at the bottom)
     EXTRA_TURNS = 1.25;       % how far the spiral is drawn past the tip, in turns
+    COVER_TOL  = 0.5;         % mm: add units until the STL ends are covered within this
+    MAX_EXTRA  = 4;           % safety cap on extra base / tip units
     SAVE_PNG   = false;
     % -------------------------------------------------------------------
 
@@ -34,37 +37,55 @@ function spirobs2_log_spiral_slice()
     M = spirobModel(F, N, DTHETA_DEG/2);
     b = F.b;  dth = F.dth;  beta = F.beta;
 
+    % ---- extend the joint series to cover the whole STL ----
+    % joint j (j = 0 is the first detected joint): z_j = zv - S*beta^(-j)
+    nb = 0;                                             % extra units below the first joint (base)
+    while (F.zv - F.S*beta^nb) > G.zlo + COVER_TOL && nb < MAX_EXTRA
+        nb = nb + 1;
+    end
+    nt = 0;                                             % extra units above the last model joint (tip)
+    while (F.zv - F.S*beta^(-(N+nt))) < G.zhi - COVER_TOL && nt < MAX_EXTRA
+        nt = nt + 1;
+    end
+    jj  = (-nb : N+nt).';                               % joint indices, base -> tip
+    Nx  = numel(jj) - 1;                                % total number of units
+    zJx = F.zv - F.S*beta.^(-jj);                       % joint heights (model)
+    zEx = zJx;
+    zEx(nb+1 : nb+N) = G.zj(:);                         % keep the measured joint heights where detected
+
     % ---- spiral geometry (paper Eqs. 1-2) ----
-    th0 = THETA0_DEG*pi/180;
-    thJ = th0 - (0:N).'*dth;                            % joint angles, base -> tip
-    rhoC = M.rhoJ;                                      % central spiral radius at joints
-    a1 = rhoC(1)*exp(-b*th0);                           % rho_c = a1 e^{b theta}
+    th0  = THETA0_DEG*pi/180;
+    thJ  = th0 - jj*dth;                                % joint angles, base -> tip
+    rhoC = M.rhoJ(1) * beta.^(-jj);                     % central spiral radius at every joint
+    a1 = M.rhoJ(1)*exp(-b*th0);                         % rho_c = a1 e^{b theta}
     a  = 2*a1/(exp(2*pi*b) + 1);                        % rho   = a  e^{b theta}
     CJ = [rhoC.*cos(thJ), rhoC.*sin(thJ)];              % joints on the central spiral
 
     figure('Color', 'w', 'Position', [60 60 900 900]); hold on;
-    th = linspace(thJ(end) - 2*pi*EXTRA_TURNS, th0 + dth, 1500);
+    th = linspace(thJ(end) - 2*pi*EXTRA_TURNS, thJ(1) + dth, 1500);
     plot(a*exp(b*th).*cos(th), a*exp(b*th).*sin(th), 'k-', 'LineWidth', 2);                 % original spiral
     hO = plot(NaN, NaN, 'k-', 'LineWidth', 2);
-    thN = linspace(thJ(end), th0 + dth, 600);
+    thN = linspace(thJ(end), thJ(1) + dth, 600);
     plot(a*exp(b*(thN+2*pi)).*cos(thN), a*exp(b*(thN+2*pi)).*sin(thN), 'k:', 'LineWidth', 1);  % next turn
     hC = plot(a1*exp(b*th).*cos(th), a1*exp(b*th).*sin(th), '--', 'Color', [0.93 0.6 0.35], 'LineWidth', 1.5);
-    for j = 1:N+1                                       % rays (unit faces of the ideal design)
+    for j = 1:Nx+1                                      % rays (unit faces of the ideal design)
         rin = a*exp(b*thJ(j)); rout = a*exp(b*(thJ(j)+2*pi));
         plot([rin rout]*cos(thJ(j)), [rin rout]*sin(thJ(j)), '-', 'Color', [0.7 0.7 0.7], 'LineWidth', 0.7);
     end
 
     % ---- place every STL unit rigidly on its chord ----
-    zE = [G.zj(:); M.zJ(N+1)];                          % unit edges (tip end taken from the model)
-    zm = (S(:,2) + S(:,4))/2;
+    zm = (S(:,2) + S(:,4))/2;                           % z-midpoint of every slice segment
     sgn = 1; if strcmpi(ARM_SIDE, 'outer'), sgn = -1; end
+    zLoK = [-Inf; zEx(2:Nx)];                           % first unit also takes anything below it
+    zHiK = [zEx(2:Nx); Inf];                            % last unit also takes anything above it
+
     hG = [];
-    for k = 1:N
+    for k = 1:Nx
         d = CJ(k+1,:) - CJ(k,:);  d = d/norm(d);        % axis direction, base -> tip
         nIn = sgn*[d(2), -d(1)];                        % right-hand normal points to the spiral centre
         Mid = (CJ(k,:) + CJ(k+1,:))/2;
-        in = zm > zE(k) & zm < zE(k+1);
-        zmid = (zE(k) + zE(k+1))/2;
+        in = zm > zLoK(k) & zm <= zHiK(k);
+        zmid = (zEx(k) + zEx(k+1))/2;
         Ua = S(in,2) - zmid;  Ub = S(in,4) - zmid;
         Pa = Mid + Ua.*d + S(in,1).*nIn;                % [n x 2] via implicit expansion
         Pb = Mid + Ub.*d + S(in,3).*nIn;
@@ -78,10 +99,10 @@ function spirobs2_log_spiral_slice()
     title(sprintf(['STL slice on the logarithmic spiral (cf. paper Fig. 1B)\n' ...
         '\\Delta\\theta = %g\\circ, b = %.3f, a = %.2f mm, arm side = %s'], DTHETA_DEG, b, a, ARM_SIDE));
     legend([hO hC hG], {'original spiral \rho = a e^{b\theta}', 'central spiral (axis)', 'STL slice units'}, 'Location', 'southwest');
-    fprintf('Spiral: a = %.3f mm, b = %.4f, beta = %.4f; base joint at theta = %g deg\n', a, b, beta, THETA0_DEG);
+    fprintf('Spiral: a = %.3f mm, b = %.4f, beta = %.4f; first joint at theta = %g deg\n', a, b, beta, THETA0_DEG);
+    fprintf('Units: %d detected + %d base + %d tip = %d placed\n', N, nb, nt, Nx);
     if SAVE_PNG, print(gcf, '-dpng', '-r200', fullfile(fileparts(mfilename('fullpath')), 'spirobs2_log_spiral.png')); end
 end
-
 %% ======================================================================
 %  SHARED HELPERS (identical block in all three scripts, so each file runs
 %  on its own). No toolboxes needed; works in MATLAB R2016b+ and Octave.
@@ -221,7 +242,7 @@ function M = spirobModel(F, N, alphaDeg)
     rhoB = M.len / qp;                                 % rho_c at each unit's base-side joint
     M.deltaB = 2*rhoB*tanh(pi*b);                      % face width at base-side joint
     M.deltaT = M.deltaB / beta;                        % face width at tip-side joint
-    rB = M.deltaB/2*cos(al);  rT = M.deltaT/2*cos(al); % shoulder radii
+    rB = M.deltaB/2*cos(al); rT = M.deltaT/2*cos(al);  % shoulder radii
     M.width = 2*max(rB, rT);                           % widest diameter of the unit
     M.poly = cell(N, 1);
     for k = 1:N
