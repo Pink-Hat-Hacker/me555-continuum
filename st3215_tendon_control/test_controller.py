@@ -18,28 +18,28 @@ class Recorder(c.MockBus):
 
 class ControllerTests(unittest.TestCase):
     def make(self):
-        return c.Controller(Recorder(), fmin=-5, fmax=15, max_delta=1.0)
+        return c.Controller(Recorder(), base=2.0, tmin=0.5, tmax=15, max_delta=1.0)
 
     def test_clamping(self):
         ctrl = self.make()
         ctrl.set_forces([100, -100, 7])
-        self.assertEqual(ctrl.targets, [15.0, -5.0, 7.0])
+        self.assertEqual(ctrl.targets, [13.0, -1.5, 7.0])   # offsets: base 2, floor 0.5, ceiling 15
 
     def test_rate_limit(self):
         ctrl = self.make()
         ctrl.set_forces([10, 0, 0])
         ctrl.tick()
-        self.assertEqual(ctrl.sent[0], 1.0)       # not 10
+        self.assertEqual(ctrl.sent[0], 1.0)       # not 12
         for _ in range(20):
             ctrl.tick()
-        self.assertEqual(ctrl.sent[0], 10.0)
+        self.assertEqual(ctrl.sent[0], 12.0)      # base 2 + 10
 
-    def test_negative_sent_as_release(self):
+    def test_zero_is_baseline_and_negative_is_reduced_not_limp(self):
         ctrl = self.make()
-        ctrl.set_forces([0, -3, 0])
+        ctrl.set_forces([0, -1, -3])
         for _ in range(5):
             ctrl.tick()
-        self.assertTrue(all(f == c.RELEASE_FORCE_N for _, f in ctrl.bus.calls[-3:]))
+        self.assertEqual([f for _, f in ctrl.bus.calls[-3:]], [2.0, 1.0, 0.5])  # base, reduced, floor
 
     def test_validation(self):
         ctrl = self.make()

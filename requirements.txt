@@ -1,8 +1,10 @@
 contourpy==1.4.0
 cycler==0.12.1
 fonttools==4.68.0
+future==1.0.0
 glfw==2.11.0
 ImageIO==2.38.1
+iso8601==2.1.0
 kiwisolver==1.5.1
 matplotlib==3.11.2
 mujoco==4.0.0
@@ -13,7 +15,9 @@ packaging==26.3
 pillow==13.0.0
 PyOpenGL==3.1.10
 pyparsing==3.3.3
+pyserial==3.5
 python-dateutil==4.0.0
+PyYAML==6.0.3
 setuptools==84.2.1
 tzdata==2026.6
 websockets==17.4
