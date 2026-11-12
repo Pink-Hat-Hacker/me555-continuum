@@ -14,8 +14,8 @@ function spirobs3_length_width()
 % Run:  spirobs3_length_width
 
     % ------------------------- user settings --------------------------
-    STL_FILE   = 'CR_3D_V6.STL';
-    ARM_AZ_DEG = 270;
+    STL_FILE   = 'CR_3D_V20.STL';
+    ARM_AZ_DEG = 272;         % arms of V20 sit at 32/152/272 deg
     DTHETA_DEG = 30;
     B_FIXED    = [];          % [] = fit b to the STL joint spacing
     ALPHA_DEG  = [];          % [] = DTHETA_DEG/2
@@ -79,7 +79,7 @@ function fname = locateSTL(fname)
     for i = 1:numel(cands)
         if exist(cands{i}, 'file') == 2, fname = cands{i}; return; end
     end
-    [f, p] = uigetfile({'*.stl;*.STL', 'STL files'}, 'Select CR_3D_Part1_V2.STL');
+    [f, p] = uigetfile({'*.stl;*.STL', 'STL files'}, 'Select CR_3D_V20.STL');
     if isequal(f, 0), error('No STL file selected.'); end
     fname = fullfile(p, f);
 end
@@ -118,13 +118,18 @@ function S = crossSegs(P1, P2, P3, d1, d2, d3)
 end
 
 function G = analyzeSTL(P1, P2, P3)
-% Finds the robot axis (x,y centre of the central tube), the joints (where
-% the cross-section shrinks to just the central tube) and the tip height.
+% Finds the robot axis (x,y centre of the central tube), the joints (the
+% notch apexes, where the cross-section shrinks to just the central tube) and
+% the tip height.
+% V20 note: the tube radius is NOT constant (about 2.7 mm at the base joint
+% down to 1.4 mm at the tip), so a joint is a local minimum of the radial
+% extent profile Rmax(z), not "Rmax below one fixed tube radius".
     zlo = min([P1(:,3); P2(:,3); P3(:,3)]);  zhi = max([P1(:,3); P2(:,3); P3(:,3)]);
     tmin = min([P1(:,3), P2(:,3), P3(:,3)], [], 2);
     tmax = max([P1(:,3), P2(:,3), P3(:,3)], [], 2);
     L = zhi - zlo;
-    zs = (zlo + 0.05) : 0.1 : (zhi - 0.05);   n = numel(zs);
+    h = 0.1;
+    zs = (zlo + 0.05) : h : (zhi - 0.05);   n = numel(zs);
     Sl = cell(n, 1);  ext = NaN(n, 1);  ctr = NaN(n, 2);
     for i = 1:n
         z = zs(i) + 1.2e-5;
@@ -138,7 +143,7 @@ function G = analyzeSTL(P1, P2, P3)
     end
     win = zs(:) > zlo + 0.17*L & zs(:) < zhi - 0.07*L;
     e2 = ext;  e2(~win | isnan(e2)) = Inf;
-    [emin, im] = min(e2);                       % thinnest slice = tube only
+    [emin, im] = min(e2);                       % thinnest slice = tube only (tip-end neck)
     c = ctr(im, :);  Rtube = emin/2;
     Rmax = NaN(n, 1);
     for i = 1:n
@@ -146,18 +151,21 @@ function G = analyzeSTL(P1, P2, P3)
         X = [S(:,1); S(:,4)] - c(1);  Y = [S(:,2); S(:,5)] - c(2);
         Rmax(i) = max(sqrt(X.^2 + Y.^2));
     end
-    isJ = Rmax < Rtube + 0.3;   isJ(isnan(isJ)) = false;
+    % neck = flat bottom of a local minimum of Rmax: lowest value within +-6 mm
+    % (units are >= ~10 mm long) AND much thinner than the widest part within
+    % +-20 mm, so the flat widest part of a unit is not mistaken for a neck.
+    w = round(6/h);  w2 = round(20/h);
+    isJ = false(n, 1);
+    for i = 1:n
+        if isnan(Rmax(i)), continue; end
+        a = max(1, i-w);  b = min(n, i+w);  a2 = max(1, i-w2);  b2 = min(n, i+w2);
+        isJ(i) = Rmax(i) <= min(Rmax(a:b)) + 0.02 && Rmax(i) < 0.35*max(Rmax(a2:b2));
+    end
     d = diff([0; isJ(:); 0]);   st = find(d == 1);  en = find(d == -1) - 1;
     zj = zeros(numel(st), 1);  zA = zs(st);  zB = zs(en);
     for q = 1:numel(st), zj(q) = (zA(q) + zB(q))/2; end
     keep = zj < zhi - 3;                        % last run is the tip apex, not a joint
-    zj = zj(keep);  zA = zA(keep);  zB = zB(keep);
-    % The first notch is bounded below by the flat top of the base block, so
-    % its tube-only run is cut short: take the joint from the run's upper end.
-    if numel(zj) > 2
-        runL = zB - zA;  medL = median(runL(2:end));
-        if runL(1) < 0.85*medL, zj(1) = zB(1) - medL/2; end
-    end
+    zj = zj(keep);
     G.c = c;  G.Rtube = Rtube;  G.zj = zj(:);  G.zlo = zlo;  G.zhi = zhi;
 end
 

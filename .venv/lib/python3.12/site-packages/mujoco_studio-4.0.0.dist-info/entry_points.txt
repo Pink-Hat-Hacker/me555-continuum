@@ -1,0 +1,2 @@
+[console_scripts]
+mujoco-studio = mujoco.studio.viewer:main

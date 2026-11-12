@@ -16,7 +16,7 @@ function spirobs1_overlay_uncurled()
 % Run:  spirobs1_overlay_uncurled      (STL in the same folder, or pick it)
 
     % ------------------------- user settings --------------------------
-    STL_FILE   = 'CR_3D_V6.STL';
+    STL_FILE   = 'CR_3D_V20.STL';
     ARM_AZ_DEG = 270;      % plane azimuth that contains an arm (arms at 30/150/270)
     DTHETA_DEG = 30;       % discretisation step of the paper
     B_FIXED    = [];       % [] = fit b to the STL joints;  e.g. 0.22 forces the paper's 15 deg taper
