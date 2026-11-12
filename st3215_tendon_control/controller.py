@@ -8,7 +8,7 @@ controller.py - three-tendon (A, B, C) controller for a SpiRobs-style continuum 
     python -m unittest test_controller                  quick tests (no hardware)
 
 Every input method ends up in Controller.set_forces([fa, fb, fc]), in newtons RELATIVE to a
-steady baseline tension (BASE_TENSION_N) that every tendon always carries, so none goes slack:
+steady baseline tension (BASE_TENSION_N) that every tendon always carries, so none goes sla ck:
     0 = baseline, positive = pull harder, negative = reduced tension (the tendon pays out).
 The tension sent is BASE_TENSION_N + force, never below MIN_TENSION_N (a small live pull, not
 zero, because a limp tendon is held back by the gearbox and will not unwind) and never above
@@ -29,10 +29,10 @@ BAUDRATE = 1000000
 SERVO_IDS = [1, 2, 3]          # tendon A, B, C (must exist in multi_torque.MOTORS)
 
 BASE_TENSION_N = 2.0           # N every tendon holds at rest (command 0); keeps the cables taut
-MIN_TENSION_N = 0.5            # N floor when reducing tension; > 0 so the servo actively pays out
-FORCE_MAX_N = 30.0             # N; hard ceiling on the absolute tension of any tendon
-KEY_STEP_N = 0.5               # N added/removed per key press
-MAX_DELTA_PER_TICK = 0.25      # N per tick; with TICK_S = 0.02 that is 12.5 N/s
+MIN_TENSION_N = 50            # N floor when reducing tension; > 0 so the servo actively pays out
+FORCE_MAX_N = 50.0             # N; hard ceiling on the absolute tension of any tendon
+KEY_STEP_N = 5               # N added/removed per key press
+MAX_DELTA_PER_TICK = 2      # N per tick; with TICK_S = 0.02 that is 12.5 N/s
 TICK_S = 0.02                  # ~50 Hz; also keeps the bus watchdog fed
 COMMAND_TIMEOUT_S = 0.5        # bus releases everything if no command arrives for this long
 
@@ -140,18 +140,18 @@ class Controller:
     def __init__(self, bus, ids=SERVO_IDS, base=BASE_TENSION_N, tmin=MIN_TENSION_N,
                  tmax=FORCE_MAX_N, max_delta=MAX_DELTA_PER_TICK):
         self.bus, self.ids = bus, list(ids)
-        self.base, self.tmin, self.tmax, self.max_delta = base, tmin, tmax, max_delta
+        self.tmin, self.tmax, self.max_delta = tmin, tmax, max_delta
         self.targets = [0.0, 0.0, 0.0]   # relative to base
         self.sent = [0.0, 0.0, 0.0]      # absolute N; ramps up from 0 (limp) to base at start
 
     def absolute(self, i):
         """Absolute tension wanted for tendon i."""
-        return clamp(self.base + self.targets[i], self.tmin, self.tmax)
+        return clamp(self.targets[i], self.tmin, self.tmax)
 
     def set_forces(self, forces):
         """The one entry point: [fa, fb, fc] relative to base; 0 = baseline, negative = reduced."""
         values = validate_forces(forces)
-        self.targets = [clamp(v, self.tmin - self.base, self.tmax - self.base) for v in values]
+        self.targets = [clamp(v, self.tmin, self.tmax ) for v in values]
 
     def tick(self):
         """Move each sent tension one rate-limited step toward its target and command the bus."""

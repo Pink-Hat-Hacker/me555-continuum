@@ -1,9 +1,9 @@
 """
 example_controller.py - starting point for a tendon controller. Edit freely.
 
-Running it PULLS ALL FOUR TENDONS at the forces below until you press Ctrl+C.
+Running it PULLS ALL THREE TENDONS at the forces below until you press Ctrl+C.
 
-Tendon IDs:  1 = tendon A   2 = tendon B   3 = tendon C   4 = central tendon
+Tendon IDs:  1 = tendon A   2 = tendon B   3 = tendon C
 """
 import time
 
