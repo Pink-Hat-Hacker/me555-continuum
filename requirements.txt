@@ -13,6 +13,7 @@ mujoco-studio==4.0.0
 numpy==2.5.4
 packaging==26.3
 pillow==13.0.0
+pygame==2.6.1
 PyOpenGL==3.1.10
 pyparsing==3.3.3
 pyserial==3.5
