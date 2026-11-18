@@ -11,12 +11,12 @@ switching) and four demos:
     pwm       open-loop PWM mode: apply a fixed duty cycle (~ fixed torque while stalled)
     hold      closed loop: change speed until the measured current (torque) hits a target
 
-Run from this folder, with the venv active, e.g. in PowerShell:
+Run from this folder, with the venv active, e.g. in a terminal (macOS: ls /dev/cu.* shows the port; it is auto-detected if you omit --port):
 
-    python torque_control.py monitor --port COM3 --id 1
-    python torque_control.py push    --port COM3 --id 1 --limit 300 --steps 800
-    python torque_control.py pwm     --port COM3 --id 1 --duty 150
-    python torque_control.py hold    --port COM3 --id 1 --ma 500 --log run.csv
+    python torque_control.py monitor --id 1
+    python torque_control.py push    --id 1 --limit 300 --steps 800
+    python torque_control.py pwm     --id 1 --duty 150
+    python torque_control.py hold    --id 1 --ma 500 --log run.csv
 
 Positive / negative values pick the direction. Ctrl+C stops any demo, and the
 servo is put back in position mode holding where it is (or use --on-exit release).
@@ -24,6 +24,7 @@ servo is put back in position mode holding where it is (or use --on-exit release
 
 import argparse
 import csv
+import glob
 import sys
 import time
 from dataclasses import dataclass
@@ -34,7 +35,27 @@ sys.path.insert(0, _here)                    # the scservo_sdk folder shipped ne
 sys.path.append(os.path.dirname(_here))      # or one level up, as in the original SDK layout
 from scservo_sdk import *  # noqa: E402,F403
 
-DEFAULT_PORT = "COM3"  # Windows: Device Manager > Ports. Linux: /dev/ttyUSB0 or /dev/ttyACM0
+
+
+def find_port(port=None):
+    """Return `port` if given, else the first USB serial device for this OS.
+    macOS: /dev/cu.usbmodem* etc. (cu.*, not tty.*). Linux: ttyUSB*/ttyACM*. Windows: COM3."""
+    if port:
+        return port
+    if sys.platform == "darwin":
+        patterns = ["/dev/cu.usbmodem*", "/dev/cu.usbserial*", "/dev/cu.wchusbserial*"]
+    elif sys.platform.startswith("linux"):
+        patterns = ["/dev/ttyUSB*", "/dev/ttyACM*"]
+    else:
+        return "COM3"
+    for pat in patterns:
+        found = sorted(glob.glob(pat))
+        if found:
+            return found[0]
+    raise SystemExit("No USB serial port found; plug in the servo adapter or pass --port")
+
+
+DEFAULT_PORT = None  # None = auto-detect via find_port(); override with --port
 
 # ---------------------------------------------------------------------------
 # Registers sms_sts.py doesn't wrap (or doesn't define at all)
@@ -363,7 +384,7 @@ def cmd_hold(servo, sid, args, log):
 # ---------------------------------------------------------------------------
 def build_parser():
     common = argparse.ArgumentParser(add_help=False)
-    common.add_argument("--port", default=DEFAULT_PORT, help=f"serial port (default {DEFAULT_PORT})")
+    common.add_argument("--port", default=DEFAULT_PORT, help="serial port, e.g. /dev/cu.usbmodem1101 (default: auto-detect)")
     common.add_argument("--baud", type=int, default=1000000)
     common.add_argument("--id", type=int, default=1, help="servo ID (default 1)")
     common.add_argument("--seconds", type=float, default=0, help="run time, 0 = until Ctrl+C")
@@ -403,6 +424,7 @@ COMMANDS = {"monitor": cmd_monitor, "push": cmd_push, "pwm": cmd_pwm, "hold": cm
 
 
 def connect(port, baud):
+    port = find_port(port)
     port_handler = PortHandler(port)
     if not port_handler.openPort():
         sys.exit(f"Could not open {port}")

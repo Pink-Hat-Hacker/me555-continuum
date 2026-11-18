@@ -55,7 +55,7 @@ import torque_control as tc   # also brings in the SDK (PortHandler, GroupSyncRe
 # ---------------------------------------------------------------------------
 # Configuration - edit these
 # ---------------------------------------------------------------------------
-PORT = "COM3"
+PORT = None                  # None = auto-detect (macOS /dev/cu.usbmodem*), or set e.g. "/dev/cu.usbmodem1101"
 BAUDRATE = 1000000
 
 
@@ -82,8 +82,7 @@ SPOOL_RADIUS_M = 0.01825   # support-free spool (36 mm groove) wound with 0.5 mm
 MOTORS = [
     MotorConfig(id=1, name="tendon A", spool_radius_m=SPOOL_RADIUS_M),
     MotorConfig(id=2, name="tendon B", spool_radius_m=SPOOL_RADIUS_M),
-    MotorConfig(id=3, name="tendon C", spool_radius_m=SPOOL_RADIUS_M),
-    MotorConfig(id=4, name="central tendon", spool_radius_m=SPOOL_RADIUS_M),
+    MotorConfig(id=3, name="tendon C", spool_radius_m=SPOOL_RADIUS_M)
 ]
 
 ERRBIT_OVERLOAD = 32
@@ -182,7 +181,7 @@ class TorqueBus:
             raise ValueError(f"every motor needs its own ID, got {ids}")
         if on_exit not in ("hold", "release") or watchdog_action not in ("hold", "release"):
             raise ValueError("on_exit and watchdog_action must be 'hold' or 'release'")
-        self.port_name, self.baudrate = port, baudrate
+        self.port_name, self.baudrate = tc.find_port(port), baudrate
         self.motors = {m.id: _Motor(m) for m in motors}
         self.command_timeout, self.watchdog_action = command_timeout, watchdog_action
         self.miss_limit, self.on_exit = miss_limit, on_exit
@@ -710,7 +709,7 @@ def cmd_set_id(bus, old, new):
 
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--port", default=PORT, help=f"serial port (default {PORT})")
+    p.add_argument("--port", default=PORT, help="serial port (default: auto-detect)")
     p.add_argument("--baud", type=int, default=BAUDRATE)
     action = p.add_mutually_exclusive_group()
     action.add_argument("--check", action="store_true", help="ping configured servos and show feedback (read only)")

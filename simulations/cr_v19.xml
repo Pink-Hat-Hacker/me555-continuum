@@ -1,0 +1,192 @@
+<mujoco model="CR_3D_V19">
+  <compiler angle="radian" meshdir="meshes"/>
+  <option timestep="0.001" integrator="implicitfast" gravity="0 0 -9.81"/>
+  <visual><global offwidth="1280" offheight="960"/><quality shadowsize="2048"/><headlight ambient=".45 .45 .45" diffuse=".6 .6 .6"/></visual>
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1=".85 .9 .95" rgb2="1 1 1" width="256" height="256"/>
+    <texture name="grid" type="2d" builtin="checker" rgb1=".92 .92 .92" rgb2=".86 .86 .86" width="256" height="256"/>
+    <material name="grid" texture="grid" texrepeat="6 6" reflectance=".05"/>
+    <material name="tpu" rgba=".95 .45 .1 1" specular=".3"/>
+    <material name="basemat" rgba=".35 .38 .42 1" specular=".3"/>
+    <mesh name="base" file="base.stl" inertia="exact"/>
+    <mesh name="link01" file="link01.stl" inertia="exact"/>
+    <mesh name="link02" file="link02.stl" inertia="exact"/>
+    <mesh name="link03" file="link03.stl" inertia="exact"/>
+    <mesh name="link04" file="link04.stl" inertia="exact"/>
+    <mesh name="link05" file="link05.stl" inertia="exact"/>
+    <mesh name="link06" file="link06.stl" inertia="exact"/>
+    <mesh name="link07" file="link07.stl" inertia="exact"/>
+    <mesh name="link08" file="link08.stl" inertia="exact"/>
+    <mesh name="link09" file="link09.stl" inertia="exact"/>
+    <mesh name="link10" file="link10.stl" inertia="exact"/>
+    <mesh name="link11" file="link11.stl" inertia="exact"/>
+    <mesh name="link12" file="link12.stl" inertia="exact"/>
+    <mesh name="link13" file="link13.stl" inertia="exact"/>
+  </asset>
+  <default>
+    <geom contype="0" conaffinity="0"/>
+    <site size="0.0012" rgba="1 1 1 1" group="3"/>
+  </default>
+  <worldbody>
+    <light pos="0.5 -0.6 1.2" dir="-0.3 0.4 -1" diffuse=".7 .7 .7"/>
+    <geom type="plane" size="1 1 .01" pos="0 0 -0.001" material="grid"/>
+    <camera name="side" pos="0.62 -0.55 0.22" xyaxes="0.66 0.75 0 -0.12 0.10 0.99" fovy="40"/>
+    <geom name="base" type="mesh" mesh="base" material="basemat" density="1200"/>
+    <site name="t1_base" pos="0.027707 0.017179 0.039500"/>
+    <site name="t2_base" pos="-0.028730 0.015405 0.039500"/>
+    <site name="t3_base" pos="0.001024 -0.032584 0.039500"/>
+    <body name="b01" pos="0 0 0.043500">
+      <joint name="neck01" type="ball" limited="true" range="0 0.52360" stiffness="0.312293" damping="0.01086" armature="1e-7"/>
+      <geom name="link01" type="mesh" mesh="link01" material="tpu" density="1200"/>
+      <site name="t1_g01" pos="0.025854 0.016030 0.021250"/>
+      <site name="t2_g01" pos="-0.026809 0.014375 0.021250"/>
+      <site name="t3_g01" pos="0.000956 -0.030405 0.021250"/>
+      <body name="b02" pos="0 0 0.042250">
+        <joint name="neck02" type="ball" limited="true" range="0 0.52360" stiffness="0.278158" damping="0.00780" armature="1e-7"/>
+        <geom name="link02" type="mesh" mesh="link02" material="tpu" density="1200"/>
+        <site name="t1_g02" pos="0.023975 0.014865 0.019250"/>
+        <site name="t2_g02" pos="-0.024862 0.013331 0.019250"/>
+        <site name="t3_g02" pos="0.000886 -0.028196 0.019250"/>
+        <body name="b03" pos="0 0 0.038250">
+          <joint name="neck03" type="ball" limited="true" range="0 0.52360" stiffness="0.246578" damping="0.00552" armature="1e-7"/>
+          <geom name="link03" type="mesh" mesh="link03" material="tpu" density="1200"/>
+          <site name="t1_g03" pos="0.021511 0.013337 0.017250"/>
+          <site name="t2_g03" pos="-0.022306 0.011960 0.017250"/>
+          <site name="t3_g03" pos="0.000795 -0.025298 0.017250"/>
+          <body name="b04" pos="0 0 0.033750">
+            <joint name="neck04" type="ball" limited="true" range="0 0.52360" stiffness="0.217452" damping="0.00388" armature="1e-7"/>
+            <geom name="link04" type="mesh" mesh="link04" material="tpu" density="1200"/>
+            <site name="t1_g04" pos="0.019216 0.011914 0.015250"/>
+            <site name="t2_g04" pos="-0.019926 0.010684 0.015250"/>
+            <site name="t3_g04" pos="0.000710 -0.022599 0.015250"/>
+            <body name="b05" pos="0 0 0.030000">
+              <joint name="neck05" type="ball" limited="true" range="0 0.52360" stiffness="0.190674" damping="0.00270" armature="1e-7"/>
+              <geom name="link05" type="mesh" mesh="link05" material="tpu" density="1200"/>
+              <site name="t1_g05" pos="0.017057 0.010576 0.013750"/>
+              <site name="t2_g05" pos="-0.017688 0.009484 0.013750"/>
+              <site name="t3_g05" pos="0.000630 -0.020060 0.013750"/>
+              <body name="b06" pos="0 0 0.026750">
+                <joint name="neck06" type="ball" limited="true" range="0 0.52360" stiffness="0.166141" damping="0.00185" armature="1e-7"/>
+                <geom name="link06" type="mesh" mesh="link06" material="tpu" density="1200"/>
+                <site name="t1_g06" pos="0.015069 0.009343 0.012000"/>
+                <site name="t2_g06" pos="-0.015626 0.008378 0.012000"/>
+                <site name="t3_g06" pos="0.000557 -0.017721 0.012000"/>
+                <body name="b07" pos="0 0 0.024000">
+                  <joint name="neck07" type="ball" limited="true" range="0 0.52360" stiffness="0.143747" damping="0.00124" armature="1e-7"/>
+                  <geom name="link07" type="mesh" mesh="link07" material="tpu" density="1200"/>
+                  <site name="t1_g07" pos="0.013258 0.008221 0.010500"/>
+                  <site name="t2_g07" pos="-0.013748 0.007372 0.010500"/>
+                  <site name="t3_g07" pos="0.000490 -0.015592 0.010500"/>
+                  <body name="b08" pos="0 0 0.021000">
+                    <joint name="neck08" type="ball" limited="true" range="0 0.52360" stiffness="0.123388" damping="0.00081" armature="1e-7"/>
+                    <geom name="link08" type="mesh" mesh="link08" material="tpu" density="1200"/>
+                    <site name="t1_g08" pos="0.011601 0.007193 0.009250"/>
+                    <site name="t2_g08" pos="-0.012030 0.006450 0.009250"/>
+                    <site name="t3_g08" pos="0.000429 -0.013643 0.009250"/>
+                    <body name="b09" pos="0 0 0.018500">
+                      <joint name="neck09" type="ball" limited="true" range="0 0.52360" stiffness="0.104954" damping="0.00051" armature="1e-7"/>
+                      <geom name="link09" type="mesh" mesh="link09" material="tpu" density="1200"/>
+                      <site name="t1_g09" pos="0.010097 0.006260 0.008500"/>
+                      <site name="t2_g09" pos="-0.010470 0.005614 0.008500"/>
+                      <site name="t3_g09" pos="0.000373 -0.011874 0.008500"/>
+                      <body name="b10" pos="0 0 0.016750">
+                        <joint name="neck10" type="ball" limited="true" range="0 0.52360" stiffness="0.088337" damping="0.00030" armature="1e-7"/>
+                        <geom name="link10" type="mesh" mesh="link10" material="tpu" density="1200"/>
+                        <site name="t1_g10" pos="0.008754 0.005428 0.007500"/>
+                        <site name="t2_g10" pos="-0.009077 0.004867 0.007500"/>
+                        <site name="t3_g10" pos="0.000324 -0.010295 0.007500"/>
+                        <body name="b11" pos="0 0 0.014750">
+                          <joint name="neck11" type="ball" limited="true" range="0 0.52360" stiffness="0.073424" damping="0.00016" armature="1e-7"/>
+                          <geom name="link11" type="mesh" mesh="link11" material="tpu" density="1200"/>
+                          <site name="t1_g11" pos="0.007556 0.004685 0.006500"/>
+                          <site name="t2_g11" pos="-0.007835 0.004201 0.006500"/>
+                          <site name="t3_g11" pos="0.000279 -0.008886 0.006500"/>
+                          <body name="b12" pos="0 0 0.013000">
+                            <joint name="neck12" type="ball" limited="true" range="0 0.52360" stiffness="0.060097" damping="0.00007" armature="1e-7"/>
+                            <geom name="link12" type="mesh" mesh="link12" material="tpu" density="1200"/>
+                            <site name="t1_g12" pos="0.006527 0.004047 0.006000"/>
+                            <site name="t2_g12" pos="-0.006768 0.003629 0.006000"/>
+                            <site name="t3_g12" pos="0.000241 -0.007676 0.006000"/>
+                            <body name="b13" pos="0 0 0.011750">
+                              <joint name="neck13" type="ball" limited="true" range="0 0.52360" stiffness="0.048232" damping="0.00002" armature="1e-7"/>
+                              <geom name="link13" type="mesh" mesh="link13" material="tpu" density="1200"/>
+                              <site name="t1_g13" pos="0.005652 0.003504 0.006250"/>
+                              <site name="t2_g13" pos="-0.005861 0.003142 0.006250"/>
+                              <site name="t3_g13" pos="0.000209 -0.006647 0.006250"/>
+                              <site name="tip" pos="0 0 0.011840" size="0.002" rgba="1 0 0 1" group="0"/>
+                            </body>
+                          </body>
+                        </body>
+                      </body>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <tendon>
+    <spatial name="tendon1" width="0.0008" rgba="0.1 0.1 0.1 1">
+      <site site="t1_base"/>
+      <site site="t1_g01"/>
+      <site site="t1_g02"/>
+      <site site="t1_g03"/>
+      <site site="t1_g04"/>
+      <site site="t1_g05"/>
+      <site site="t1_g06"/>
+      <site site="t1_g07"/>
+      <site site="t1_g08"/>
+      <site site="t1_g09"/>
+      <site site="t1_g10"/>
+      <site site="t1_g11"/>
+      <site site="t1_g12"/>
+      <site site="t1_g13"/>
+    </spatial>
+    <spatial name="tendon2" width="0.0008" rgba="0.1 0.1 0.1 1">
+      <site site="t2_base"/>
+      <site site="t2_g01"/>
+      <site site="t2_g02"/>
+      <site site="t2_g03"/>
+      <site site="t2_g04"/>
+      <site site="t2_g05"/>
+      <site site="t2_g06"/>
+      <site site="t2_g07"/>
+      <site site="t2_g08"/>
+      <site site="t2_g09"/>
+      <site site="t2_g10"/>
+      <site site="t2_g11"/>
+      <site site="t2_g12"/>
+      <site site="t2_g13"/>
+    </spatial>
+    <spatial name="tendon3" width="0.0008" rgba="0.1 0.1 0.1 1">
+      <site site="t3_base"/>
+      <site site="t3_g01"/>
+      <site site="t3_g02"/>
+      <site site="t3_g03"/>
+      <site site="t3_g04"/>
+      <site site="t3_g05"/>
+      <site site="t3_g06"/>
+      <site site="t3_g07"/>
+      <site site="t3_g08"/>
+      <site site="t3_g09"/>
+      <site site="t3_g10"/>
+      <site site="t3_g11"/>
+      <site site="t3_g12"/>
+      <site site="t3_g13"/>
+    </spatial>
+  </tendon>
+  <actuator>
+    <general name="pull1" tendon="tendon1" gainprm="-1" biastype="none" ctrllimited="true" ctrlrange="0 20"/>
+    <general name="pull2" tendon="tendon2" gainprm="-1" biastype="none" ctrllimited="true" ctrlrange="0 20"/>
+    <general name="pull3" tendon="tendon3" gainprm="-1" biastype="none" ctrllimited="true" ctrlrange="0 20"/>
+  </actuator>
+  <sensor>
+    <framepos name="tip_pos" objtype="site" objname="tip"/>
+    <tendonpos name="len1" tendon="tendon1"/>
+    <tendonpos name="len2" tendon="tendon2"/>
+    <tendonpos name="len3" tendon="tendon3"/>
+  </sensor>
+</mujoco>
